@@ -1,0 +1,13 @@
+
+/.cache
+
+/classes/
+/instances/
+/model/
+/output/
+
+/images/
+/.backup/
+/.classes/
+/.images/
+/.instances/
