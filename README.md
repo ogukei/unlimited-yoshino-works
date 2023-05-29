@@ -16,7 +16,7 @@ https://huggingface.co/docs/peft/task_guides/dreambooth_lora
 
 ## Usage
 
-1. Place Yorita Yoshino images in `./instances`
+1. Place Yorita Yoshino images in the `./instances` directory
     * The recommended number of images is around 10 to 20
     * Use images with a white background, not a transparent background
 2. Run the following command to train our model
@@ -36,7 +36,7 @@ docker compose run --build infer
 
 ## Tweak LoRA
 
-1. Put the character images in `./instances`
+1. Put the character images in the `./instances` directory
 1. Enter the character name into the INSTANCE_PROMPT variable in the `./train.entry.sh` script.
 1. Enter the common characteristics among your instance images into the CLASS_PROMPT variable.
     * e.g. `brown hair, brown eyes, long hair, white background`
