@@ -2,6 +2,10 @@
 
 Generates Yorita Yoshino images unlimitedly.
 
+Actual output |
+:-:|
+![yoshino](https://gist.githubusercontent.com/ogukei/07c3262baee88c3214e4d272289ef3e2/raw/2fc36b262f4bc17e40832d29d19635955deb4b0c/yoshino.png) |
+
 https://huggingface.co/docs/peft/task_guides/dreambooth_lora
 
 ## Requirements
