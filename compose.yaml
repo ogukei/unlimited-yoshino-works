@@ -18,6 +18,8 @@ services:
       - .:/workspace
     stdin_open: true
     tty: true
+    environment:
+      - HUGGINGFACE_TOKEN
   infer:
     build:
       context: .

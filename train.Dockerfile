@@ -1,8 +1,56 @@
 
-FROM huggingface/peft-gpu
+# https://github.com/huggingface/diffusers/blob/7a91ea6c2b53f94da930a61ed571364022b21044/docker/diffusers-pytorch-cuda/Dockerfile
+FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
+LABEL maintainer="Hugging Face"
+LABEL repository="diffusers"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && \
+    apt install -y bash \
+                   build-essential \
+                   git \
+                   git-lfs \
+                   curl \
+                   ca-certificates \
+                   libsndfile1-dev \
+                   libgl1 \
+                   python3.8 \
+                   python3-pip \
+                   python3.8-venv && \
+    rm -rf /var/lib/apt/lists
+
+# make sure to use venv
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# pre-install the heavy dependencies (these can later be overridden by the deps from setup.py)
+RUN python3 -m pip install --no-cache-dir --upgrade pip && \
+    python3 -m pip install --no-cache-dir \
+        torch \
+        torchvision \
+        torchaudio \
+        invisible_watermark && \
+    python3 -m pip install --no-cache-dir \
+        accelerate \
+        datasets \
+        hf-doc-builder \
+        huggingface-hub \
+        Jinja2 \
+        librosa \
+        numpy \
+        scipy \
+        tensorboard \
+        transformers \
+        omegaconf \
+        pytorch-lightning \
+        xformers
+
+CMD ["/bin/bash"]
+# ------
 
 RUN apt update
-RUN apt install -y unzip git wget
+RUN apt install -y unzip git wget libgl1
 
 # user
 ARG USERNAME=user
@@ -14,16 +62,26 @@ RUN groupadd --gid $USER_GID $USERNAME \
 # set user
 USER $USERNAME
 
+# app
 WORKDIR /app/
-RUN git clone https://github.com/huggingface/peft
-WORKDIR /app/peft
-RUN git reset --hard 3714aa2fff158fdfa637b2b65952580801d890b2
+RUN git clone https://github.com/huggingface/diffusers
+WORKDIR /app/diffusers
+# https://github.com/huggingface/diffusers/commits/dreambooth/sd-xl-3
+RUN git reset --hard 82b4cb51d69ee644f1e30c2d982d88f0702bd620
 
-WORKDIR /app/peft/examples/lora_dreambooth
-RUN /bin/bash -c ". activate peft && pip install -r requirements.txt"
+# https://github.com/huggingface/diffusers/tree/main/examples/dreambooth
+USER root
+# pip install for the repository 
+WORKDIR /app/diffusers
+RUN python3 -m pip install -e .
+# pip install for the example
+WORKDIR /app/diffusers/examples/dreambooth
+RUN python3 -m pip install -r requirements.txt
+# To use 8-bit Adam
+RUN python3 -m pip install bitsandbytes
 
-# StableDiffusionKDiffusionPipeline sample_dpmpp_2m
-RUN /bin/bash -c ". activate peft && pip install k-diffusion"
+# app
+USER $USERNAME
 
 COPY --chown=$USERNAME train.entry.sh .
 RUN chmod +x train.entry.sh

@@ -4,41 +4,39 @@
 export TORCH_HOME=/workspace/.cache/torch
 export HF_HOME=/workspace/.cache/huggingface
 
-mkdir -p $TORCH_HOME
-mkdir -p $HF_HOME
-mkdir -p /workspace/instances
-mkdir -p /workspace/classes
-mkdir -p /workspace/model
+INSTANCE_DIR="/workspace/instances"
+OUTPUT_DIR="/workspace/model"
+
+mkdir -p "$TORCH_HOME"
+mkdir -p "$HF_HOME"
+mkdir -p "$INSTANCE_DIR"
+mkdir -p "$OUTPUT_DIR"
 mkdir -p /workspace/images
 
-MODEL_NAME_OR_PATH="Korakoe/OpenNiji"
+MODEL_NAME="stabilityai/stable-diffusion-xl-base-0.9"
 INSTANCE_PROMPT="yoshino"
-CLASS_PROMPT="1girl, brown hair, brown eyes, long hair, very long hair, blunt bangs, white background, simple background"
 
-. activate peft
+# login
+if [ ! -z "$HUGGINGFACE_TOKEN" ]; then
+  huggingface-cli login --token $HUGGINGFACE_TOKEN
+fi
 
-accelerate launch train_dreambooth.py \
-  --pretrained_model_name_or_path="$MODEL_NAME_OR_PATH" \
-  --instance_data_dir=/workspace/instances \
-  --class_data_dir=/workspace/classes \
-  --output_dir=/workspace/model \
-  --train_text_encoder \
-  --with_prior_preservation --prior_loss_weight=1.0 \
+# Basic Usage
+# https://github.com/huggingface/diffusers/blob/089bf7777998f53c0f0af4ae887b127dfec3ef50/examples/dreambooth/README_sdxl.md
+# Parameter Tweaks
+# https://github.com/huggingface/diffusers/blob/089bf7777998f53c0f0af4ae887b127dfec3ef50/examples/dreambooth/train_dreambooth_lora_sdxl.py
+accelerate launch train_dreambooth_lora_sdxl.py \
+  --pretrained_model_name_or_path=$MODEL_NAME  \
+  --output_dir=$OUTPUT_DIR \
+  --instance_data_dir=$INSTANCE_DIR \
   --instance_prompt="$INSTANCE_PROMPT" \
-  --class_prompt="$CLASS_PROMPT" \
-  --resolution=512 \
+  --mixed_precision="fp16" \
+  --resolution=1024 \
   --train_batch_size=1 \
-  --lr_scheduler="cosine_with_restarts" \
-  --lr_num_cycles=4 \
-  --lr_warmup_steps=500 \
-  --num_class_images=200 \
-  --use_lora \
-  --lora_r 16 \
-  --lora_alpha 27 \
-  --lora_text_encoder_r 16 \
-  --lora_text_encoder_alpha 17 \
-  --learning_rate=1e-4 \
-  --gradient_accumulation_steps=1 \
   --gradient_checkpointing \
-  --mixed_precision=fp16 \
-  --max_train_steps=600
+  --learning_rate=1e-4 \
+  --lr_scheduler="cosine" \
+  --lr_warmup_steps=0 \
+  --max_train_steps=100 \
+  --use_8bit_adam \
+  --seed="0"

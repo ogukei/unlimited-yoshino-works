@@ -19,17 +19,19 @@ https://huggingface.co/docs/peft/task_guides/dreambooth_lora
 1. Place Yorita Yoshino images in the `./instances` directory
     * The recommended number of images is around 10 to 20
     * Use images with a white background, not a transparent background
-2. Run the following command to train our model
+2. You need to specify your HuggingFace token to the environment variable `HUGGINGFACE_TOKEN` in order to download SDXL 0.9 from the hub at the moment
+    * via https://huggingface.co/settings/tokens
+3. Run the following command to train our model
 
 ```
-docker compose run --build train
+docker compose run --build -e HUGGINGFACE_TOKEN=<YOUR_TOKEN> train
 ```
 
-3. Make sure `./model/text_encoder` and `./model/unet` are generated
+3. Make sure the file `./model/pytorch_lora_weights.bin` is generated
 4. Run the following command to generate images
 
 ```
-docker compose run --build infer
+docker compose run --build -e HUGGINGFACE_TOKEN=<YOUR_TOKEN> infer
 ```
 
 5. Make sure `./images/<uuid>/000.png` and so on are generated
